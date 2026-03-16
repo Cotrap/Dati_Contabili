@@ -425,6 +425,33 @@
         .avviso b { color: var(--gray-800); }
 
         /* ============================================
+           PULSANTE STAMPA / PDF
+           ============================================ */
+        .print-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            background: rgba(255,255,255,0.15);
+            border: 1.5px solid rgba(255,255,255,0.4);
+            color: white;
+            font-size: 0.78rem;
+            font-weight: 600;
+            font-family: var(--font);
+            padding: 5px 13px;
+            border-radius: 20px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.15s, border-color 0.15s;
+            letter-spacing: 0.02em;
+        }
+        .print-btn:hover {
+            background: rgba(255,255,255,0.28);
+            border-color: rgba(255,255,255,0.7);
+        }
+        .print-btn .pb-icon { font-size: 0.9rem; }
+        @media (max-width: 480px) { .print-btn .pb-label { display: none; } }
+
+        /* ============================================
            SCROLL-TO-TOP
            ============================================ */
         #scrollTop {
@@ -479,6 +506,9 @@
         <div class="header-subtitle">Itineris — Guida Operativa</div>
     </div>
     <span class="header-badge">COTRAP</span>
+    <button class="print-btn" onclick="window.print()" title="Stampa o salva come PDF">
+        <span class="pb-icon">🖨️</span><span class="pb-label">Stampa / PDF</span>
+    </button>
 </header>
 
 <!-- ============ OVERLAY ============ -->
