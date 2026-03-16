@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Guida passo-passo per scaricare i Dati Contabili da Itineris: accesso al profilo contabile, esportazione da Ordini → Spese Abbonamenti Agenzie e download dalla sezione Esportazioni." />
+    <title>Scarica Dati Contabili — Itineris</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================
+           VARIABILI
+           ============================================ */
+        :root {
+            --primary: #009B3A;
+            --primary-dark: #007A2F;
+            --primary-light: #2DB84B;
+            --primary-faint: #e8f7ee;
+            --secondary: #555555;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --warning-bg: #fffbeb;
+            --error: #ef4444;
+            --error-bg: #fef2f2;
+            --info: #0ea5e9;
+            --info-bg: #f0f9ff;
+            --white: #ffffff;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            --sidebar-width: 260px;
+            --header-height: 64px;
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+            --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
+        }
+
+        /* ============================================
+           RESET & BASE
+           ============================================ */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; font-size: 16px; }
+        body {
+            font-family: var(--font);
+            background: var(--gray-50);
+            color: var(--gray-800);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* ============================================
+           HEADER
+           ============================================ */
+        header {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: var(--header-height);
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0 1.5rem;
+            z-index: 1000;
+            box-shadow: var(--shadow-md);
+        }
+        .hamburger-btn {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            color: white;
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+        .header-logo {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+        .header-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: white;
+            letter-spacing: 0.02em;
+        }
+        .header-subtitle {
+            font-size: 0.78rem;
+            color: rgba(255,255,255,0.75);
+            font-weight: 400;
+        }
+        .header-badge {
+            margin-left: auto;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.05em;
+        }
+
+        /* ============================================
+           LAYOUT
+           ============================================ */
+        .layout {
+            display: flex;
+            min-height: 100vh;
+            padding-top: var(--header-height);
+        }
+
+        /* ============================================
+           SIDEBAR
+           ============================================ */
+        .sidebar {
+            width: var(--sidebar-width);
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            bottom: 0;
+            background: white;
+            border-right: 1px solid var(--gray-200);
+            overflow-y: auto;
+            z-index: 900;
+            transition: transform 0.3s ease;
+        }
+        .sidebar-inner { padding: 1.25rem 0; }
+        .sidebar-section-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--gray-400);
+            padding: 0.75rem 1.25rem 0.35rem;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            padding: 0.6rem 1.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--gray-700);
+            cursor: pointer;
+            text-decoration: none;
+            border-left: 3px solid transparent;
+            transition: all 0.15s ease;
+        }
+        .nav-item:hover {
+            background: var(--primary-faint);
+            color: var(--primary-dark);
+            border-left-color: var(--primary-light);
+        }
+        .nav-item.active {
+            background: var(--primary-faint);
+            color: var(--primary-dark);
+            border-left-color: var(--primary);
+            font-weight: 600;
+        }
+        .nav-item-icon {
+            font-size: 1rem;
+            width: 22px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 850;
+        }
+
+        /* ============================================
+           MAIN CONTENT
+           ============================================ */
+        main {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            min-width: 0;
+        }
+        .content-wrapper {
+            max-width: 820px;
+            margin: 0 auto;
+            padding: 2.5rem 2rem 5rem;
+        }
+
+        /* ============================================
+           SEZIONI
+           ============================================ */
+        .section {
+            margin-bottom: 4rem;
+            scroll-margin-top: calc(var(--header-height) + 1.5rem);
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--gray-200);
+        }
+        .section-icon {
+            width: 44px;
+            height: 44px;
+            background: var(--primary-faint);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+        .section-num {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.1rem;
+        }
+        h2.section-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            line-height: 1.2;
+        }
+
+        /* ============================================
+           HERO
+           ============================================ */
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: var(--radius-lg);
+            padding: 2.5rem;
+            color: white;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '📊';
+            position: absolute;
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 5rem;
+            opacity: 0.15;
+        }
+        .hero-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 0.5rem;
+        }
+        .hero h1 {
+            font-size: 1.85rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            line-height: 1.2;
+        }
+        .hero p {
+            font-size: 0.95rem;
+            color: rgba(255,255,255,0.85);
+            max-width: 480px;
+            line-height: 1.6;
+        }
+        .hero-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1.25rem;
+        }
+        .hero-chip {
+            background: rgba(255,255,255,0.18);
+            color: white;
+            font-size: 0.78rem;
+            font-weight: 500;
+            padding: 4px 12px;
+            border-radius: 99px;
+            border: 1px solid rgba(255,255,255,0.25);
+        }
+
+        /* ============================================
+           RIEPILOGO (TLDR)
+           ============================================ */
+        .tldr {
+            background: var(--primary-faint);
+            border: 1px solid #bbf7d0;
+            border-radius: var(--radius-md);
+            padding: 1.1rem 1.25rem;
+            margin-bottom: 2.5rem;
+        }
+        .tldr-header {
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--primary-dark);
+            margin-bottom: 0.65rem;
+        }
+        .tldr ul {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+        .tldr ul li {
+            font-size: 0.9rem;
+            color: var(--gray-700);
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+        .tldr ul li::before {
+            content: '⚡';
+            font-size: 0.85rem;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        /* ============================================
+           TIPOGRAFIA CONTENUTO
+           ============================================ */
+        .section p {
+            font-size: 0.95rem;
+            color: var(--gray-700);
+            margin-bottom: 1rem;
+            line-height: 1.75;
+        }
+
+        /* ============================================
+           STEPS (passaggi numerati)
+           ============================================ */
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            margin: 1.25rem 0;
+        }
+        .step {
+            display: flex;
+            gap: 1rem;
+            position: relative;
+        }
+        .step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 17px;
+            top: 38px;
+            bottom: 0;
+            width: 2px;
+            background: var(--gray-200);
+        }
+        .step-num {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1;
+        }
+        .step-body {
+            padding-bottom: 1.4rem;
+            padding-top: 0.4rem;
+        }
+        .step-body strong {
+            display: block;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 0.3rem;
+        }
+        .step-body p {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            line-height: 1.65;
+            margin-bottom: 0;
+        }
+
+        /* ============================================
+           AVVISI / CALLOUT
+           ============================================ */
+        .avviso {
+            display: flex;
+            gap: 0.75rem;
+            padding: 1rem 1.1rem;
+            border-radius: var(--radius-md);
+            margin: 1.1rem 0;
+            font-size: 0.875rem;
+            line-height: 1.65;
+        }
+        .avviso-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+        .avviso-info { background: var(--info-bg); border-left: 4px solid var(--info); }
+        .avviso-warning { background: var(--warning-bg); border-left: 4px solid var(--warning); }
+        .avviso-success { background: #f0fdf4; border-left: 4px solid var(--success); }
+        .avviso b { color: var(--gray-800); }
+
+        /* ============================================
+           SCROLL-TO-TOP
+           ============================================ */
+        #scrollTop {
+            position: fixed;
+            bottom: 1.75rem;
+            right: 1.75rem;
+            width: 44px;
+            height: 44px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.1rem;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 800;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        #scrollTop:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+        #scrollTop.visible { display: flex; }
+
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open {
+                transform: translateX(0);
+                box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            }
+            .sidebar-overlay.open { display: block; }
+            .hamburger-btn { display: flex; align-items: center; justify-content: center; }
+            main { margin-left: 0; }
+            .content-wrapper { padding: 1.5rem 1rem 4rem; }
+            .hero { padding: 1.75rem 1.25rem; }
+            .hero h1 { font-size: 1.4rem; }
+            #scrollTop { bottom: 1rem; right: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header>
+    <button class="hamburger-btn" id="menuBtn" aria-label="Apri menu">☰</button>
+    <div class="header-logo">📊</div>
+    <div>
+        <div class="header-title">Dati Contabili</div>
+        <div class="header-subtitle">Itineris — Guida Operativa</div>
+    </div>
+    <span class="header-badge">COTRAP</span>
+</header>
+
+<!-- ============ OVERLAY ============ -->
+<div class="sidebar-overlay" id="overlay"></div>
+
+<!-- ============ SIDEBAR ============ -->
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-inner">
+        <div class="sidebar-section-label">Panoramica</div>
+        <a class="nav-item" href="#intro"><span class="nav-item-icon">📋</span>Introduzione</a>
+
+        <div class="sidebar-section-label" style="margin-top:0.5rem;">Guida Passo-Passo</div>
+        <a class="nav-item" href="#step1"><span class="nav-item-icon">🔐</span>1. Profilo Contabile</a>
+        <a class="nav-item" href="#step2"><span class="nav-item-icon">🧾</span>2. Ordini → Spese Agenzie</a>
+        <a class="nav-item" href="#step3"><span class="nav-item-icon">📅</span>3. Anno Contabile</a>
+        <a class="nav-item" href="#step4"><span class="nav-item-icon">⬆️</span>4. Avvia Esportazione</a>
+        <a class="nav-item" href="#step5"><span class="nav-item-icon">📤</span>5. Sezione Esportazioni</a>
+        <a class="nav-item" href="#step6"><span class="nav-item-icon">⬇️</span>6. Scarica il File</a>
+    </div>
+</nav>
+
+<!-- ============ LAYOUT ============ -->
+<div class="layout">
+    <main>
+        <div class="content-wrapper">
+
+            <!-- HERO -->
+            <div class="hero">
+                <div class="hero-label">Guida Operativa · Profilo Contabile</div>
+                <h1>Scaricare i Dati Contabili</h1>
+                <p>Segui questi passaggi per generare e scaricare il file dei dati contabili relativi alle Spese Abbonamenti Agenzie.</p>
+                <div class="hero-chips">
+                    <span class="hero-chip">🔐 Profilo Contabile</span>
+                    <span class="hero-chip">🧾 Ordini → Spese Agenzie</span>
+                    <span class="hero-chip">📤 Esportazioni</span>
+                </div>
+            </div>
+
+            <!-- TLDR -->
+            <div class="tldr">
+                <div class="tldr-header">⚡ In breve</div>
+                <ul>
+                    <li>Accedi con le credenziali del <b>Profilo Contabile</b> (diverse da quelle commerciali).</li>
+                    <li>Vai in <b>Ordini → Spese Abbonamenti Agenzie</b>, inserisci l'anno e premi <b>Esporta</b>.</li>
+                    <li>Recupera il file da <b>Esportazioni</b>: l'ultima richiesta è sempre in cima alla lista.</li>
+                </ul>
+            </div>
+
+            <!-- SEZIONE INTRO -->
+            <section class="section" id="intro">
+                <div class="section-header">
+                    <div class="section-icon">📋</div>
+                    <div>
+                        <div class="section-num">Panoramica</div>
+                        <h2 class="section-title">Introduzione</h2>
+                    </div>
+                </div>
+
+                <p>Questa procedura permette di estrarre dal portale Itineris i dati contabili relativi alle <b>Spese Abbonamenti Agenzie</b> per un determinato anno. Il file generato può essere importato nei software di gestione aziendale.</p>
+
+                <div class="avviso avviso-warning">
+                    <span class="avviso-icon">⚠️</span>
+                    <div><b>Attenzione:</b> assicurati di essere nel <b>Profilo Contabile</b> e non in quello commerciale. Controlla il nome utente visualizzato in <b>basso a sinistra</b> della schermata: deve corrispondere alle credenziali contabili fornite da COTRAP. Se sei nell'account sbagliato, esegui il logout e accedi con le credenziali corrette.</div>
+                </div>
+            </section>
+
+            <!-- SEZIONE PASSAGGI -->
+            <section class="section" id="step1">
+                <div class="section-header">
+                    <div class="section-icon">🚀</div>
+                    <div>
+                        <div class="section-num">Guida Passo-Passo</div>
+                        <h2 class="section-title">Procedura Completa</h2>
+                    </div>
+                </div>
+
+                <div class="steps">
+
+                    <!-- STEP 1 -->
+                    <div class="step" id="step1">
+                        <div class="step-num">1</div>
+                        <div class="step-body">
+                            <strong>🔐 Accedi al Profilo Contabile</strong>
+                            <p>Accedi al portale Itineris usando le <b>credenziali contabili</b> (ID utente e password forniti dall'Amministratore COTRAP). Le credenziali contabili sono <b>diverse</b> da quelle del profilo commerciale.<br><br>
+                            Verifica sempre di essere nell'account corretto: in <b>basso a sinistra</b> della schermata è visibile il nome utente e tra parentesi il nome dell'azienda consorziata.</p>
+                        </div>
+                    </div>
+
+                    <!-- STEP 2 -->
+                    <div class="step" id="step2">
+                        <div class="step-num">2</div>
+                        <div class="step-body">
+                            <strong>🧾 Entra in Ordini → Spese Abbonamenti Agenzie</strong>
+                            <p>Dal menu principale in alto, clicca su <b>Ordini</b>.<br>
+                            Si aprirà il sottomenu: seleziona la voce <b>Spese Abbonamenti Agenzie</b>.<br>
+                            Si aprirà la sezione dedicata con i filtri di ricerca.</p>
+                        </div>
+                    </div>
+
+                    <!-- STEP 3 -->
+                    <div class="step" id="step3">
+                        <div class="step-num">3</div>
+                        <div class="step-body">
+                            <strong>📅 Inserisci l'Anno Contabile</strong>
+                            <p>Nel campo <b>Anno Contabile</b> inserisci l'anno di cui hai bisogno (es. <b>2025</b>).<br>
+                            Verifica che tutti gli altri filtri siano impostati correttamente prima di procedere.</p>
+                        </div>
+                    </div>
+
+                    <!-- STEP 4 -->
+                    <div class="step" id="step4">
+                        <div class="step-num">4</div>
+                        <div class="step-body">
+                            <strong>⬆️ Avvia l'Esportazione</strong>
+                            <p>Clicca sul pulsante <b>Esporta</b>.<br>
+                            Il sistema elaborerà la richiesta e preparerà il file. <b>Non chiudere la pagina</b> durante l'elaborazione.<br>
+                            Il file <b>non viene scaricato subito</b>: verrà reso disponibile nella sezione Esportazioni.</p>
+                        </div>
+                    </div>
+
+                    <!-- STEP 5 -->
+                    <div class="step" id="step5">
+                        <div class="step-num">5</div>
+                        <div class="step-body">
+                            <strong>📤 Vai alla Sezione Esportazioni</strong>
+                            <p>Dal menu principale, clicca su <b>Esportazioni</b>.<br>
+                            Si aprirà l'elenco di tutti i file generati dal profilo contabile.<br>
+                            <b>L'ultima esportazione richiesta apparirà in cima alla lista</b> (la più recente è sempre la prima).</p>
+                        </div>
+                    </div>
+
+                    <!-- STEP 6 -->
+                    <div class="step" id="step6">
+                        <div class="step-num">6</div>
+                        <div class="step-body">
+                            <strong>⬇️ Scarica il File</strong>
+                            <p>Individua l'esportazione in cima alla lista e clicca sull'<b>icona di download</b> a destra della riga.<br>
+                            Il file verrà scaricato automaticamente nella cartella <b>Download</b> del tuo PC.</p>
+                        </div>
+                    </div>
+
+                </div><!-- /steps -->
+
+                <div class="avviso avviso-info">
+                    <span class="avviso-icon">ℹ️</span>
+                    <div>I file non vengono cancellati automaticamente dalla sezione Esportazioni. È possibile tornare in qualsiasi momento per scaricare nuovamente un file già generato in precedenza.</div>
+                </div>
+
+                <div class="avviso avviso-success">
+                    <span class="avviso-icon">✅</span>
+                    <div><b>Operazione completata!</b> Il file dei dati contabili è ora disponibile nella cartella <b>Download</b> del tuo PC, pronto per essere importato nel gestionale aziendale.</div>
+                </div>
+
+            </section>
+
+        </div><!-- /content-wrapper -->
+    </main>
+</div>
+
+<!-- SCROLL TO TOP -->
+<button id="scrollTop" aria-label="Torna in cima">↑</button>
+
+<script>
+    // Hamburger menu
+    const menuBtn = document.getElementById('menuBtn');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    menuBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('open');
+    });
+    overlay.addEventListener('click', () => {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('open');
+    });
+
+    // Chiudi sidebar al click su nav-item (mobile)
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+        });
+    });
+
+    // Scroll to top
+    const scrollTopBtn = document.getElementById('scrollTop');
+    window.addEventListener('scroll', () => {
+        scrollTopBtn.classList.toggle('visible', window.scrollY > 300);
+    });
+    scrollTopBtn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Active nav highlight on scroll
+    const sections = document.querySelectorAll('.step[id], .section[id]');
+    const navItems = document.querySelectorAll('.nav-item');
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                navItems.forEach(ni => ni.classList.remove('active'));
+                const active = document.querySelector(`.nav-item[href="#${entry.target.id}"]`);
+                if (active) active.classList.add('active');
+            }
+        });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+
+    sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
